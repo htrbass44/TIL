@@ -21,6 +21,24 @@
 <tr><td><a href="aws-cdk/cdk-patterns-and-samples.md" title="cdk-patterns/serverless・aws-samples・Serverless Land Patternsの位置づけ比較とcdkp CLIの使い方">☁️ cdkパターン集</a></td><td></td><td></td><td></td><td><a href="aws-cdk/cdk-nag-s3-cloudfront-handson.md" title="cdk-nagハンズオン：S3+CloudFront(OAC)構成へのAwsSolutionsルール適用、Validation Pluginフレームワークでのacknowledge()による抑制方法">☁️ cdk-nag</a></td><td colspan="2"><a href="aws-agent/aws-devops-agent-handson.md" title="CloudWatchアラーム検知からAWS DevOps Agentが自律調査・緩和策生成するまでを体験するハンズオン（Agent Space作成、Webhook連携、SAMでのCloudWatch連携デプロイ、アラーム発火の動作確認、チャットでの調査依頼、Mitigation Plan生成、クリーンアップ）">🕵️ DevOps Agent</a></td></tr>
 <tr><td><strong>26</strong></td><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td><td><strong>30</strong></td><td><strong>31</strong></td><td></td></tr>
 <tr><td><a href="aws-agent/aws-finops-agent-handson.md" title="Amazon Bedrock基盤のAWS FinOps Agentで自然言語のコスト分析・異常調査・レポート自動化を体験するハンズオン（Agent作成、コスト質問チャット、コンテキストファイル/メモリ、最適化推奨のとりまとめ、定期レポート自動化、異常検知の自動調査とSlack通知）">💰 FinOps Agent</a></td><td colspan="3"><a href="aws-agent/bedrock-agentcore-finops-handson.md" title="（学習中）aws-samples/sample-cost-analyzer-agentを教材に、Amazon Bedrock AgentCore RuntimeとStrands Agents SDK、FinOps実践（CUR2.0+Athena、クロスアカウントIAM）を学ぶハンズオン">🧠 AgentCore+FinOps</a></td><td></td><td></td><td></td></tr>
-<tr><td></td><td></td><td></td><td><a href="aws-agent/aws-agentcore-handson.md" title="Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td colspan="3"><a href="aws-agent/aws-agentcore-handson.md" title="（7/29〜8/4に学習）Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td><td></td></tr>
+</tbody>
+</table>
+
+### 2026年8月
+
+<table>
+<thead>
+<tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td><strong>1</strong></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td><a href="aws-agent/aws-agentcore-handson.md" title="（7/29〜8/4に学習）Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td></tr>
+<tr><td><strong>2</strong></td><td><strong>3</strong></td><td><strong>4</strong></td><td><strong>5</strong></td><td><strong>6</strong></td><td><strong>7</strong></td><td><strong>8</strong></td></tr>
+<tr><td colspan="3"><a href="aws-agent/aws-agentcore-handson.md" title="（7/29〜8/4に学習）Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><strong>9</strong></td><td><strong>10</strong></td><td><strong>11</strong></td><td><strong>12</strong></td><td><strong>13</strong></td><td><strong>14</strong></td><td><strong>15</strong></td></tr>
+<tr><td><strong>16</strong></td><td><strong>17</strong></td><td><strong>18</strong></td><td><strong>19</strong></td><td><strong>20</strong></td><td><strong>21</strong></td><td><strong>22</strong></td></tr>
+<tr><td><strong>23</strong></td><td><strong>24</strong></td><td><strong>25</strong></td><td><strong>26</strong></td><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td></tr>
+<tr><td><strong>30</strong></td><td><strong>31</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
