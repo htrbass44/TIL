@@ -2,7 +2,7 @@
 
 ## 学習ログ
 
-凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
+凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
 
 ### 2026年7月
 
@@ -36,6 +36,7 @@
 <tr><td></td><td></td><td></td><td></td><td></td><td></td><td><a href="aws-agent/aws-agentcore-handson.md" title="（7/29〜8/4に学習）Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td></tr>
 <tr><td><strong>2</strong></td><td><strong>3</strong></td><td><strong>4</strong></td><td><strong>5</strong></td><td><strong>6</strong></td><td><strong>7</strong></td><td><strong>8</strong></td></tr>
 <tr><td colspan="3"><a href="aws-agent/aws-agentcore-handson.md" title="（7/29〜8/4に学習）Strandsエージェントをagentcore CLIで作成しAWS上に本番デプロイ、Gateway(Lambdaのツール化)・Memory(短期/長期記憶)・Observability(CloudWatchトレース)まで一気通貫で体験するハンズオン">🧠 AgentCore基礎</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td><a href="aws-agent/aws-security-agent-handson.md" title="（学習中）AWS Security Agentで設計レビュー→脅威モデリング(STRIDE)→コードレビュー→侵入テストを一気通貫で体験するハンズオン">🛡️ Security Agent</a></td><td></td><td></td><td></td><td></td></tr>
 <tr><td><strong>9</strong></td><td><strong>10</strong></td><td><strong>11</strong></td><td><strong>12</strong></td><td><strong>13</strong></td><td><strong>14</strong></td><td><strong>15</strong></td></tr>
 <tr><td><strong>16</strong></td><td><strong>17</strong></td><td><strong>18</strong></td><td><strong>19</strong></td><td><strong>20</strong></td><td><strong>21</strong></td><td><strong>22</strong></td></tr>
 <tr><td><strong>23</strong></td><td><strong>24</strong></td><td><strong>25</strong></td><td><strong>26</strong></td><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td></tr>
