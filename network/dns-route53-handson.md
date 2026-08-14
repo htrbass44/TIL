@@ -17,7 +17,84 @@ DNS を「ドメイン名を IP に変換する電話帳」と説明されるこ
 
 この「たらい回し」が **委任（delegation）** であり、「答えを持っているサーバー」が **ネームサーバー（権威 DNS サーバー）** であり、「そのサーバーが持っている答えの束」が **ゾーン**、AWS における実体が **ホストゾーン** である。
 
-### 1.2 登場人物 4 種類
+### 1.2 ドメイン名の構造と TLD
+
+DNS の階層を理解する前に、**ドメイン名そのものが階層構造になっている**ことを押さえる。
+
+```
+www . htrbass44 . click .
+ │        │         │    └─ ルート（末尾のドット。通常は省略される）
+ │        │         └────── TLD（Top Level Domain / トップレベルドメイン）
+ │        └──────────────── SLD（Second Level Domain / 登録する部分）
+ └───────────────────────── サブドメイン
+```
+
+**ドメイン名は右から左に読む。右にあるほど上位**である。1.1 節の「たらい回し」がルート → TLD → ドメインの順に降りていくのは、この構造をそのままなぞっているだけ。
+
+#### TLD は「管理主体の切れ目」でもある
+
+```mermaid
+graph TD
+    ROOT["ルート「.」<br/>管理: IANA / ICANN"]
+    ROOT -->|委任| TLD1[".click<br/>管理: レジストリ<br/>（Trellian 系 trs-dns）"]
+    ROOT -->|委任| TLD2[".com<br/>管理: Verisign"]
+    ROOT -->|委任| TLD3[".jp<br/>管理: JPRS"]
+    TLD1 -->|委任| SLD["htrbass44.click<br/>管理: 登録者（あなた）<br/>= Route 53 ホストゾーン"]
+    SLD --> SUB1["www.htrbass44.click"]
+    SLD --> SUB2["blog.htrbass44.click"]
+
+    style ROOT fill:#5F6368,color:#fff
+    style TLD1 fill:#FF9900,color:#000
+    style SLD fill:#232F3E,color:#fff
+```
+
+| 階層 | 例 | 誰が管理するか | 変更手段 |
+|------|-----|----------------|----------|
+| ルート `.` | — | IANA / ICANN | 一般利用者は触れない |
+| **TLD** | `click` | **レジストリ**（TLD ごとに別会社） | レジストラ経由で申請 |
+| SLD | `htrbass44` | 登録者（あなた） | ドメインを購入・更新 |
+| サブドメイン | `www` `blog` | 登録者（あなた） | **ホストゾーン内で自由に作れる** |
+
+> **ここが実務上の分かれ目**: `www.htrbass44.click` を作るのは自分のホストゾーンを編集するだけ（一瞬・無料）。一方 `htrbass44.click` の**ネームサーバーを変える**のは TLD レジストリの台帳を書き換える行為で、レジストラ経由の申請となり反映に時間がかかる（演習4 でこれを行う）。
+
+#### TLD の種類
+
+| 種類 | 内容 | 例 |
+|------|------|-----|
+| gTLD | 分野別。古くからあるもの | `.com` `.net` `.org` |
+| **new gTLD** | 2012年以降に大量追加。1,000種以上 | **`.click`** `.cloud` `.app` `.dev` |
+| ccTLD | 国・地域コード（ISO 3166-1） | `.jp` `.uk` `.de` |
+| sTLD | 登録に資格が必要 | `.gov` `.edu` |
+| IDN TLD | 非 ASCII | `.みんな` `.日本` |
+
+現在ルートゾーンに登録されている TLD は **約 1,438 個**（演習1 で実際に数える）。
+
+#### TLD ごとに運用者もサーバー構成も違う
+
+これは覚えるものではなく、**毎回調べるもの**である。命名規則に統一性はない。
+
+| TLD | 権威ネームサーバー | 台数 |
+|-----|-------------------|:---:|
+| `.com` | `a.gtld-servers.net` 〜 `m.gtld-servers.net` | 13 |
+| `.jp` | `a.dns.jp` 〜 | 複数 |
+| `.click` | `ns01.trs-dns.com` / `ns01.trs-dns.net` / `ns10.trs-dns.org` / `ns10.trs-dns.info` | 4 |
+
+```bash
+# TLD の権威サーバーを調べる（演習1-2 で使う）
+q click NS 8.8.8.8
+```
+
+> `.click` のレジストリは `.bar` `.cloud` `.blockbuster` など多数の TLD を同じサーバー群で運用している。**「TLD の数 = レジストリの数」ではない。**
+
+#### 本ハンズオンに効いてくること
+
+| 事実 | 意味 |
+|------|------|
+| `.click` は new gTLD で安価 | 学習用ドメインとして適切。Cloud Identity にも問題なく使える |
+| ルートゾーンに `.click` の DS レコードがある | **DNSSEC に対応している TLD**（ロードマップ★1で試せる） |
+| new gTLD はメールで不利に扱われることがある | 今回は Cloud Identity Free（メール非ホスト）なので影響なし |
+
+### 1.3 登場人物 4 種類
 
 ここを混同すると全部わからなくなる。**「ドメインを買う」と「DNS を運用する」は完全に別の行為**である。
 
@@ -36,7 +113,7 @@ DNS を「ドメイン名を IP に変換する電話帳」と説明されるこ
 > "Comment": "Name servers refused query (lame delegation?) [205.251.195.65, ...]"
 > ```
 
-### 1.3 名前解決の流れ（委任チェーン）
+### 1.4 名前解決の流れ（委任チェーン）
 
 ```mermaid
 sequenceDiagram
@@ -58,7 +135,7 @@ sequenceDiagram
 
 重要なのは、**各段階のサーバーは「答え」ではなく「次に聞くべき相手（NS レコード）」を返している**という点。この「次に聞け」の連鎖が委任チェーンである。
 
-### 1.4 ホストゾーンとネームサーバーの関係
+### 1.5 ホストゾーンとネームサーバーの関係
 
 ```mermaid
 graph TD
@@ -92,7 +169,7 @@ graph TD
 
 > **ここが最頻出のつまずき**: NS レコードは**親側と子側の 2 箇所にある**。実際の委任を決めているのは**親（レジストリ）側**。ホストゾーンの中の NS レコードをいくら編集しても、レジストラ側を更新しなければ何も変わらない。逆に、レジストラ側の NS を差し替えれば、ホストゾーン内の NS レコードが古いままでも名前解決は新しい方に向く。
 
-### 1.5 なぜ Route 53 の NS は 4 つとも TLD が違うのか
+### 1.6 なぜ Route 53 の NS は 4 つとも TLD が違うのか
 
 ```
 ns-19.awsdns-02.com
@@ -103,14 +180,14 @@ ns-1557.awsdns-02.co.uk
 
 `.com` / `.net` / `.org` / `.co.uk` にわざと分散されている。これは **NS のホスト名自身を解決するために別の TLD を引く必要がある**ため、1 つの TLD レジストリが停止しても残りで解決できるようにする可用性設計である。偶然ではない。
 
-### 1.6 主要レコード種別
+### 1.7 主要レコード種別
 
 | 種別 | 意味 | 例・注意点 |
 |------|------|-----------|
 | `A` | ホスト名 → IPv4 アドレス | `www.example.com → 203.0.113.10` |
 | `AAAA` | ホスト名 → IPv6 アドレス | |
 | `CNAME` | 別名 → 正式名への転送 | **ゾーン頂点（apex）には置けない**。同じ名前に他のレコードを共存させられない |
-| `MX` | メールの配送先サーバー | 優先度付き。Cloud Identity Free では**不要** |
+| `MX` | メールの配送先サーバー | 優先度付き。Cloud Identity Free 自体は Gmail を持たないが、**外部の転送サービスと組み合わせれば実際にメールを受信できる**（演習8） |
 | `TXT` | 任意の文字列 | **ドメイン所有権証明**、SPF、DKIM、DMARC に使う |
 | `NS` | このゾーンの権威サーバー | 親側と子側の 2 箇所 |
 | `SOA` | ゾーンの管理情報 | 自動生成 |
@@ -127,7 +204,7 @@ ns-1557.awsdns-02.co.uk
 | クエリ料金 | 課金対象 | AWS リソース宛は無料 |
 | TTL | 自分で指定 | 指定不可（AWS が管理） |
 
-### 1.7 TTL と「DNS 伝播」の正体
+### 1.8 TTL と「DNS 伝播」の正体
 
 「DNS の変更が反映されるまで時間がかかる」とよく言うが、実際には**どこかに伝播しているわけではない**。世界中のリゾルバが持っている**古いキャッシュが TTL で切れるのを待っている**だけである。
 
@@ -166,7 +243,8 @@ ns-1557.awsdns-02.co.uk
 | 5 | レコードを作って引く | A / TXT / CNAME / ALIAS | 20分 |
 | 6 | TTL とキャッシュを体感する | **DNS 伝播の正体** | 15分 |
 | 7 | ドメイン所有権証明の仕組み | TXT 検証 | 15分 |
-| 8 | コストとクリーンアップ | ホストゾーン課金 | 10分 |
+| 8 | メール転送を設定する（MX） | **MX レコード・SPF の書き換え** | 25分 |
+| 9 | コストとクリーンアップ | ホストゾーン課金 | 10分 |
 
 ### 2.3 演習の流れ
 
@@ -179,7 +257,8 @@ flowchart TD
     E4 --> E5["演習5<br/>A / TXT / CNAME / ALIAS<br/>を作って引く"]
     E5 --> E6["演習6<br/>TTLを変えて<br/>キャッシュの挙動を観察"]
     E6 --> E7["演習7<br/>TXTでドメイン所有権を証明<br/>= Cloud Identity 検証"]
-    E7 --> E8["演習8<br/>コスト確認と後片付け"]
+    E7 --> E8["演習8<br/>MXレコードでメール転送<br/>admin@ を実際に使えるようにする"]
+    E8 --> E9["演習9<br/>コスト確認と後片付け"]
 
     style E1 fill:#4285F4,color:#fff
     style E2 fill:#EA4335,color:#fff
@@ -234,7 +313,7 @@ nslookup -type=NS click. 8.8.8.8
 powershell -NoProfile -Command "Resolve-DnsName -Name 'click.' -Type NS -Server 8.8.8.8 -DnsOnly"
 ```
 
-> 1.4 節で触れた「DNS の内部表現では常に末尾にドットが付く」がここで効いてくる。**ドットは「ルートから見た絶対名である」という宣言**であり、Windows ではこれが省略できない場面がある。TLD を直接引くときは必ず付けること（`example.com` のようにドットを含む名前なら省略できる）。
+> 1.2 節の構造図で「末尾のドット＝ルート」と示したことが、ここで効いてくる。**ドットは「ルートから見た絶対名である」という宣言**であり、Windows ではこれが省略できない場面がある。TLD を直接引くときは必ず付けること（`example.com` のようにドットを含む名前なら省略できる）。
 
 **② nslookup の日本語出力が GitBash で文字化けする**
 
@@ -279,40 +358,98 @@ aws sts get-caller-identity
 
 `Account` が `219002378686`（`aws-yk`）であることを確認する。
 
-#### 0-3. 便利関数を定義する
+#### 0-3. 作業ディレクトリを有効化する
 
-以降で何度も使うので、GitBash に関数を定義しておく。
+シェルスクリプトや設定ファイルは、ホームディレクトリや `/tmp` ではなく **`handson/` 配下に集約**する。理由は 0-4 で説明する（Windows では `/tmp` を使うと実際に壊れる）。
 
 ```bash
-cat > ~/dns-helpers.sh <<'EOF'
-# 指定サーバーに問い合わせる: q <名前> [タイプ] [問い合わせ先]
-# 末尾のドットは自動で付与する（シングルラベル名対策）
-q() {
-  local name="${1%.}." type="${2:-A}" server="${3:-8.8.8.8}"
-  powershell -NoProfile -Command \
-    "Resolve-DnsName -Name '$name' -Type $type -Server $server -DnsOnly -ErrorAction SilentlyContinue |
-     Select-Object Name,Type,TTL,NameHost,IPAddress,NameExchange,Strings,PrimaryServer |
-     Format-List"
-}
+cd /c/dev/handson-gcloud-cnt/handson
 
-# DoH 版（結果がJSONで構造が見やすい。SERVFAIL の理由も返る）
-qh() {
-  curl -s "https://dns.google/resolve?name=$1&type=${2:-A}" | python -m json.tool
-}
+# 初回のみ: 環境変数ファイルを用意
+cp env/handson.env.example env/handson.env
+# DOMAIN / ZONE_ID などを埋める（ZONE_ID は演習3で取得するので最初は空でよい）
 
-# nslookup 版（文字化け対策込み）
-qn() {
-  nslookup -type="${2:-A}" "${1%.}." "${3:-8.8.8.8}" 2>&1 | iconv -f CP932 -t UTF-8
-}
-EOF
+# GitBash を開くたびに実行
+source activate.sh
+```
 
-source ~/dns-helpers.sh
-q click NS
+```
+─────────────────────────────────────────────
+ HANDSON_ROOT : /c/dev/handson-gcloud-cnt/handson
+ 読込済ライブラリ: dns.sh gcp.sh
+ DOMAIN       : htrbass44.click
+─────────────────────────────────────────────
+```
+
+`activate.sh` は次の 3 つをまとめて行う。
+
+1. `env/handson.env` を読み込む（環境変数）
+2. `lib/*.sh` を読み込む（ヘルパー関数）
+3. **カレントディレクトリを `handson/` に移動する**（以降すべて相対パスで書けるようにする）
+
+利用できる DNS 関数は次のとおり（実体は [`lib/dns.sh`](../handson/lib/dns.sh)）。
+
+| 関数 | 内容 |
+|------|------|
+| `q <名前> [型] [問い合わせ先]` | `Resolve-DnsName` 版。**末尾ドットを自動付与** |
+| `qh <名前> [型]` | Google DoH 版。**SERVFAIL の理由まで JSON で返る** |
+| `qn <名前> [型] [問い合わせ先]` | `nslookup` 版。**文字化け対策込み** |
+| `trace_delegation <FQDN>` | 委任チェーンを一括診断（演習1・2 の内容を1コマンドで） |
+| `rr_apply <JSONパス>` / `rr_list` | Route 53 レコードの適用 / 一覧 |
+
+```bash
+q  click NS
 qh click NS
 qn click NS
 ```
 
 **✅ 確認ポイント**: 3 つとも `.click` の権威ネームサーバー（`ns01.trs-dns.com` 等 4 つ）が一覧表示される。
+
+#### 0-4. なぜ `/tmp` を使わないのか（Windows 必須知識）
+
+`aws` / `gcloud` / `terraform` は **ネイティブの Windows プログラム**であり、GitBash の仮想的なパス体系を知らない。
+
+```bash
+cygpath -w /tmp
+#   -> C:\Users\Yoshi\AppData\Local\Temp     ← GitBash が見る /tmp
+
+# 一方、ネイティブプログラムに "/tmp/x.json" を渡すと…
+#   -> C:\tmp\x.json                         ← 存在しない
+```
+
+つまり、次のような手順書によくある書き方は **Windows では確実に失敗する**。
+
+```bash
+# ❌ 失敗する
+cat > /tmp/rr.json <<< '...'
+aws route53 change-resource-record-sets --change-batch file:///tmp/rr.json
+#   -> Error parsing parameter: Unable to load paramfile
+```
+
+対策は 2 つある。本教材は **(1) を採用**する。
+
+| # | 方法 | 書き方 |
+|---|------|--------|
+| **1** | **`handson/` を cwd にして相対パスで渡す**（推奨） | `--change-batch file://records/rr.json` |
+| 2 | `np` でネイティブ絶対パスに変換する | `--change-batch "$(npf records/rr.json)"` |
+
+```bash
+np  records/rr.json
+#   -> C:/dev/handson-gcloud-cnt/handson/records/rr.json
+npf records/rr.json
+#   -> file://C:/dev/handson-gcloud-cnt/handson/records/rr.json
+```
+
+#### 0-5. ファイルの置き場所
+
+| ディレクトリ | 用途 | Git |
+|-------------|------|:---:|
+| `env/handson.env` | 環境固有値（ZONE_ID・ドメイン等） | ❌ 除外 |
+| `lib/` | ヘルパー関数 | ✅ |
+| `records/` | Route 53 の change-batch JSON | ✅ **残す** |
+| `tmp/` | 使い捨ての作業ファイル | ❌ 除外 |
+
+> **`records/` を使い捨てにしない理由**: 適用した JSON を残しておくと、「いつ何のレコードを入れたか」が Git 履歴として残り、そのまま Terraform 化の下書きになる。実務では DNS レコードこそ変更履歴が問われる（障害時に「誰がいつ何を変えたか」が最初に聞かれる）。
 
 **ここで学んだこと**: DNS の問い合わせは「どのサーバーに聞くか」を指定できる。既定ではリゾルバ（キャッシュ）に聞くが、`-Server` で権威サーバーに直接聞くと**キャッシュを飛ばして真実**が見える。トラブルシューティングの基本動作。
 
@@ -324,19 +461,121 @@ qn click NS
 
 #### 1-1. ルートサーバーに聞く
 
-ルートサーバーは世界に 13 系統（`a` 〜 `m.root-servers.net`）ある。
+ルートサーバーは世界に 13 系統（`a` 〜 `m.root-servers.net`）ある。**委任（referral）の観察には `qn`（nslookup 版）を使う** — `Resolve-DnsName` は委任応答を握りつぶしてしまうことがある。
 
 ```bash
-q htrbass44.click NS a.root-servers.net
+qn htrbass44.click NS a.root-servers.net
 ```
 
-ルートは `htrbass44.click` を知らないので、「`.click` はこいつらに聞け」という**委任情報**を返す。PowerShell の出力では、回答セクションが空で、権威セクションに `.click` の NS が並ぶ形になる。
+出力は **2 つのブロック**に分かれる。
 
-DoH 版のほうが構造が見やすい。
+**ブロック1: `in-addr.arpa` の話（ノイズなので無視してよい）**
+
+```
+in-addr.arpa    nameserver = f.in-addr-servers.arpa
+in-addr.arpa    nameserver = b.in-addr-servers.arpa
+...
+サーバー:  UnKnown
+Address:  198.41.0.4
+```
+
+これは本題ではない。`nslookup` は問い合わせ先サーバー（`198.41.0.4`）の名前を表示するために、まず**そのIPの逆引き（PTR）を試みる**。逆引きは `in-addr.arpa` ツリーを使うので、ルートサーバーは「`in-addr.arpa` はこいつらに聞け」という委任を返す。`nslookup` はそれを完了できず `サーバー: UnKnown` と表示し、途中で受け取った委任情報をそのまま print してしまう。**DNS の応答内容には一切影響しない。**
+
+**ブロック2: これが本命の委任**
+
+```
+click   nameserver = ns10.trs-dns.org
+click   nameserver = ns01.trs-dns.net
+click   nameserver = ns10.trs-dns.info
+click   nameserver = ns01.trs-dns.com
+ns10.trs-dns.org        internet address = 64.78.205.1
+ns10.trs-dns.org        AAAA IPv6 address = 2620:171:813:1534:8::1
+ns01.trs-dns.net        internet address = 64.96.2.1
+ns01.trs-dns.com        internet address = 64.96.1.1
+...
+```
+
+**✅ 確認ポイント（ここが演習1 で最も重要）**: 返ってきたのは `htrbass44.click NS = ...` という**答え**ではなく、`click NS = ...` という**委任**である。
+
+| | 内容 | セクション |
+|---|------|-----------|
+| 聞いたこと | `htrbass44.click` の NS は? | Question |
+| 返ってきたもの | **`click` の NS はこれ**（= その先に聞け） | Authority（権威セクション） |
+| おまけ | それらの NS の IP アドレス | Additional（追加セクション） |
+
+ルートサーバーは `htrbass44.click` を**知らないし、知る必要もない**。知っているのは「`.click` の担当者は誰か」だけ。これが 1.1 節で述べた「たらい回し」の実物である。
+
+#### 1-1-a. グルーレコード — なぜ IP まで付いてくるのか
+
+追加セクションのアドレスレコードを **グルーレコード（glue record）** と呼ぶ。これが無いと**解決が無限ループする**ケースがあるための仕組みである。
+
+```mermaid
+flowchart TD
+    Q["ns01.trs-dns.com の IP を知りたい"] --> C{"グルーが無い場合"}
+    C --> L1["ns01.trs-dns.com を引くには<br/>.com の NS に聞く必要がある"]
+    L1 --> L2["…が、もし NS 名が委任先ゾーン内<br/>（例: ns1.click を .click の NS にする）なら"]
+    L2 --> L3["ns1.click を引くには .click に聞く<br/>.click に聞くには ns1.click の IP が要る"]
+    L3 --> DEAD["🔁 循環参照 — 永久に解決不能"]
+    C --> G["グルーがある場合"]
+    G --> OK["✅ 親が IP を直接教えるので即解決"]
+
+    style DEAD fill:#EA4335,color:#fff
+    style OK fill:#34A853,color:#fff
+```
+
+このグルーは**ルートゾーンファイルに実際に書かれている**。誰でも確認できる。
 
 ```bash
-curl -s "https://dns.google/resolve?name=htrbass44.click&type=NS&do=1" | python -m json.tool
+curl -s https://www.internic.net/domain/root.zone > tmp/root.zone
+
+# .click の委任
+grep "^click\." tmp/root.zone
+
+# そのネームサーバーのグルー（アドレス）レコード
+grep -E "^ns01\.trs-dns\.com\.|^ns10\.trs-dns\.org\." tmp/root.zone
 ```
+
+```
+click.              172800  IN  NS    ns01.trs-dns.com.
+click.              172800  IN  NS    ns01.trs-dns.net.
+click.              172800  IN  NS    ns10.trs-dns.org.
+click.              172800  IN  NS    ns10.trs-dns.info.
+ns01.trs-dns.com.   172800  IN  A     64.96.1.1
+ns01.trs-dns.com.   172800  IN  AAAA  2620:57:4001::1
+ns10.trs-dns.org.   172800  IN  A     64.78.205.1
+```
+
+**ルートサーバーが返してきた IP と完全に一致する**。ルートゾーン全体でも約 25,000 行しかない — インターネット全体の入口が、この程度のテキストファイル 1 つで成り立っている。
+
+同じファイルから、1.2 節で述べた TLD の全体像も確認できる。
+
+```bash
+# 現在登録されている TLD の総数
+awk '$4=="NS"{print $1}' tmp/root.zone | sort -u | grep -v '^\.$' | wc -l
+#   -> 1438
+
+# TLD ごとに運用者もサーバー台数も違うことを確認
+awk '$4=="NS" && ($1=="click."||$1=="com."||$1=="jp."){print $1, $5}' tmp/root.zone
+
+# .click は DNSSEC 対応か（DS レコードの有無）
+awk '$1=="click." && $4=="DS"' tmp/root.zone
+```
+
+```
+click.  86400  IN  DS  65517 13 2 D09A2C14C4382634EDCCF9634FB32E91511E1E642F3C38468BA2407F1D1BAD24
+```
+
+**✅ 確認ポイント**: `.com` は 13 台、`.click` は 4 台と、TLD によって規模が違う。だから「TLD の権威サーバーは覚えるものではなく、毎回 `q <TLD> NS` で調べるもの」になる。
+
+> **Route 53 でも同じ話が起きる**: 演習4 でレジストラの NS を差し替えるとき、`.click` レジストリ側にも同様の委任情報が書き込まれる。ただし Route 53 の NS 名（`ns-19.awsdns-02.com` 等）は `.click` の外にあるので、グルーは必須ではない。**1.6 節で見た「NS を 4 つの TLD に分散する設計」は、この依存関係を分散させる意味もある。**
+
+**DoH 版で構造を見る**
+
+```bash
+qh htrbass44.click NS
+```
+
+JSON なら `Question` / `Answer` / `Authority` / `Additional` のどこに何が入っているかが明示的に分かる。`nslookup` の平坦な出力より構造を掴みやすい。
 
 #### 1-2. `.click` レジストリのネームサーバーを特定する
 
@@ -359,9 +598,22 @@ ns10.trs-dns.info
 
 #### 1-3. `.click` レジストリに、自分のドメインの委任先を聞く
 
+**ここは `qn`（nslookup 版）を使う。**
+
 ```bash
-q htrbass44.click NS ns01.trs-dns.com
+qn htrbass44.click NS ns01.trs-dns.com
 ```
+
+> **なぜ `q` ではないのか**: `Resolve-DnsName` は委任（referral）を受け取ると**自分でその先を追いかけてしまう**。今回は追いかけた先（awsdns）が `REFUSED` を返すため、最終的に `RCODE_SERVER_FAILURE`（SERVFAIL）となり **何も表示されない**。
+>
+> ```
+> $ q htrbass44.click NS ns01.trs-dns.com
+> （何も返らない）
+> ```
+>
+> 一方 `nslookup` は**受け取った委任をそのまま表示する**ので、親側の台帳を確認する用途にはこちらが適している。「委任そのものを見たいのか、最終的な答えが欲しいのか」でツールを使い分ける。
+>
+> なお `lib/dns.sh` の `q` は、結果が空になった場合に**自動で `qn` へフォールバック**するようにしてある。何も返らずに黙り込むことはない。
 
 ここで**レジストラに登録されている 4 つの NS** が返る。
 
@@ -552,13 +804,17 @@ aws route53 create-hosted-zone \
 
 ```bash
 ZONE_ID=$(aws route53 list-hosted-zones \
-  --query "HostedZones[?Name=='htrbass44.click.'].Id | [0]" \
+  --query "HostedZones[?Name=='${DOMAIN}.'].Id | [0]" \
   --output text | sed 's|/hostedzone/||')
-echo "ZONE_ID=$ZONE_ID"
+
+# env/handson.env に永続化する（次にシェルを開いても残る）
+env_set ZONE_ID "$ZONE_ID"
 
 aws route53 get-hosted-zone --id "$ZONE_ID" \
   --query 'DelegationSet.NameServers' --output table
 ```
+
+> `env_set` は [`lib/gcp.sh`](../handson/lib/gcp.sh) 定義のヘルパーで、`env/handson.env` の該当行を書き換えたうえで `export` する。**取得した ID をその場でファイルに残す**のがポイント。シェルを閉じるたびに ID を調べ直す羽目にならない。
 
 > **`Name` の末尾のドット**に注目。`htrbass44.click.` と、最後に `.` が付く。これは **FQDN（完全修飾ドメイン名）** 表記で、「ルートから見た絶対パス」を意味する。DNS の内部表現では常にこの形。
 
@@ -691,7 +947,7 @@ stateDiagram-v2
 #### 5-1. A レコードを作る
 
 ```bash
-cat > /tmp/rr-a.json <<'EOF'
+cat > records/rr-a.json <<'EOF'
 {
   "Comment": "test A record",
   "Changes": [{
@@ -707,8 +963,12 @@ cat > /tmp/rr-a.json <<'EOF'
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-a.json
+  --change-batch file://records/rr-a.json
 ```
+
+> **`file://records/rr-a.json` と相対パスで書けている**のは、`activate.sh` が cwd を `handson/` に移動しているから。0-4 で見たとおり `file:///tmp/...` は Windows では通らない。
+>
+> 以降は短縮形 `rr_apply records/rr-a.json` も使える（変更 ID と反映ステータスまで表示する）。
 
 | `Action` | 意味 |
 |----------|------|
@@ -723,7 +983,7 @@ q www.htrbass44.click A 8.8.8.8
 #### 5-2. TXT レコードを作る（クォートの罠）
 
 ```bash
-cat > /tmp/rr-txt.json <<'EOF'
+cat > records/rr-txt.json <<'EOF'
 {
   "Changes": [{
     "Action": "UPSERT",
@@ -738,7 +998,7 @@ cat > /tmp/rr-txt.json <<'EOF'
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-txt.json
+  --change-batch file://records/rr-txt.json
 
 q htrbass44.click TXT 8.8.8.8
 ```
@@ -750,7 +1010,7 @@ q htrbass44.click TXT 8.8.8.8
 同じ名前・同じタイプのレコードセットは **1 つしか作れない**。既に TXT がある場所に追加したい場合は、**レコードセットを上書きして両方の値を入れる**。
 
 ```bash
-cat > /tmp/rr-txt-multi.json <<'EOF'
+cat > records/rr-txt-multi.json <<'EOF'
 {
   "Changes": [{
     "Action": "UPSERT",
@@ -768,7 +1028,7 @@ cat > /tmp/rr-txt-multi.json <<'EOF'
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-txt-multi.json
+  --change-batch file://records/rr-txt-multi.json
 
 q htrbass44.click TXT 8.8.8.8
 ```
@@ -779,7 +1039,7 @@ q htrbass44.click TXT 8.8.8.8
 
 ```bash
 # サブドメインなら OK
-cat > /tmp/rr-cname.json <<'EOF'
+cat > records/rr-cname.json <<'EOF'
 {
   "Changes": [{
     "Action": "UPSERT",
@@ -794,7 +1054,7 @@ cat > /tmp/rr-cname.json <<'EOF'
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-cname.json
+  --change-batch file://records/rr-cname.json
 
 q blog.htrbass44.click A 8.8.8.8
 ```
@@ -804,7 +1064,7 @@ q blog.htrbass44.click A 8.8.8.8
 次に、頂点に CNAME を置こうとすると失敗することを確認する。
 
 ```bash
-cat > /tmp/rr-cname-apex.json <<'EOF'
+cat > records/rr-cname-apex.json <<'EOF'
 {
   "Changes": [{
     "Action": "UPSERT",
@@ -819,7 +1079,7 @@ cat > /tmp/rr-cname-apex.json <<'EOF'
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-cname-apex.json
+  --change-batch file://records/rr-cname-apex.json
 ```
 
 **✅ 確認ポイント**: `InvalidChangeBatch` エラーになる。理由は、**頂点には必ず SOA と NS が存在するが、CNAME は「同じ名前に他のレコードを共存させられない」という仕様**があるため（RFC 1034）。この制約を回避するために Route 53 が用意したのが ALIAS である。
@@ -827,7 +1087,7 @@ aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
 #### 5-5. ALIAS レコード（同一ゾーン内への別名）
 
 ```bash
-cat > /tmp/rr-alias.json <<EOF
+cat > records/rr-alias.json <<EOF
 {
   "Changes": [{
     "Action": "UPSERT",
@@ -845,7 +1105,7 @@ cat > /tmp/rr-alias.json <<EOF
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-alias.json
+  --change-batch file://records/rr-alias.json
 
 q htrbass44.click A 8.8.8.8
 ```
@@ -880,9 +1140,9 @@ done
 
 ```bash
 # 値を 203.0.113.99 に変更
-sed 's/203.0.113.10/203.0.113.99/' /tmp/rr-a.json > /tmp/rr-a2.json
+sed 's/203.0.113.10/203.0.113.99/' records/rr-a.json > records/rr-a2.json
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-a2.json
+  --change-batch file://records/rr-a2.json
 
 # 権威サーバーに直接聞く → 即座に新しい値
 q www.htrbass44.click A "$NEW_NS"
@@ -897,9 +1157,9 @@ q www.htrbass44.click A 8.8.8.8
 
 ```bash
 # TTL を 60 秒に下げる
-sed 's/"TTL": 300/"TTL": 60/' /tmp/rr-a2.json > /tmp/rr-a3.json
+sed 's/"TTL": 300/"TTL": 60/' records/rr-a2.json > records/rr-a3.json
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-a3.json
+  --change-batch file://records/rr-a3.json
 ```
 
 | タイミング | 推奨 TTL | 理由 |
@@ -938,14 +1198,33 @@ sequenceDiagram
 
 > **なぜ証明になるか**: ゾーンのレコードを書き換えられるのは、そのドメインの DNS を管理している人だけ。つまり **TXT を置けること＝ドメインの支配権を持つことの証明**になる。同じ原理が ACM の証明書 DNS 検証、Let's Encrypt の DNS-01 チャレンジ、各種 SaaS のドメイン認証で使われている。
 
+**Google 自身も演習1と同じことをしている**
+
+TXT コードが表示される前に、Google はまずドメインホスト（DNS の運用事業者）の選択画面を出す。
+
+![Google Workspace — ドメインホストの選択画面。Amazon Web Services が自動選択されている](./images/cloud_identity_verify_select_host.png)
+
+`Amazon Web Services` が**自動で選択されている**のは、Google が裏側で `htrbass44.click` の NS レコードを引き、ホスト名から事業者を推定しているため。
+
+```bash
+qh htrbass44.click NS
+#   -> ns-xxx.awsdns-xx.com. / ns-xxx.awsdns-xx.net. / ...
+```
+
+`awsdns` という文字列から AWS と判定している。演習1〜2 で手作業でたどった「NS を引いて委任先を確認する」という手順を、Google のサービスも内部で行っている。**この画面が正しく AWS を検出できていれば、演習4 の NS 差し替えが正常に完了している証拠**にもなる。
+
 #### 7-2. 実際に入れる
 
 Cloud Identity Free の登録画面（<https://workspace.google.com/gcpidentity/signup?sku=identitybasic>）で発行された文字列を使う。
 
+![Google Workspace — 確認コードの追加画面。TXT レコードの値としてコピーする文字列が表示される](./images/cloud_identity_verify_txt_code_redacted.png)
+
+「レコード名: デフォルト値に設定」はゾーンの頂点（`htrbass44.click` そのもの）を指す。「TTL: 最小値に設定」は反映を早めるための推奨で、1.8 節で扱った「切り替え作業の前日に TTL を短くする」のと同じ考え方。「AWS に移動」ボタンはコンソール操作用のショートカットで、今回は使わず CLI で直接投入する。
+
 ```bash
 VERIFY='google-site-verification=xxxxxxxxxxxxxxxx'   # 実際の値に置換
 
-cat > /tmp/rr-verify.json <<EOF
+cat > records/rr-verify.json <<EOF
 {
   "Comment": "Cloud Identity domain verification",
   "Changes": [{
@@ -963,7 +1242,7 @@ cat > /tmp/rr-verify.json <<EOF
 EOF
 
 aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-verify.json
+  --change-batch file://records/rr-verify.json
 ```
 
 > ⚠️ 演習5-3 で入れた TXT が消えます（同じ名前・タイプのレコードセットは 1 つのため）。共存させたい場合は `ResourceRecords` に両方を並べてください。
@@ -973,7 +1252,7 @@ aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
 ```bash
 # 変更リクエストの状態（PENDING → INSYNC）
 CHANGE_ID=$(aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" \
-  --change-batch file:///tmp/rr-verify.json --query 'ChangeInfo.Id' --output text)
+  --change-batch file://records/rr-verify.json --query 'ChangeInfo.Id' --output text)
 
 aws route53 get-change --id "$CHANGE_ID" --query 'ChangeInfo.Status'
 
@@ -983,15 +1262,164 @@ q htrbass44.click TXT 8.8.8.8
 
 **✅ 確認ポイント**: `INSYNC`（Route 53 の全ネームサーバーに配布完了）になり、`8.8.8.8` 経由で検証文字列が返ってきてから、Google 側の「確認」を押す。**先に押して失敗すると、リトライまで待たされることがある**。
 
+「確認」が通ると、証明完了の画面が表示される。
+
+![Google Workspace — ドメイン所有権の確認が完了した画面](./images/cloud_identity_verify_complete.png)
+
+この時点で `htrbass44.click` は Cloud Identity のドメインとして確定する。「省略可能な設定手順」（チームメンバー追加・プレミアム機能）は DNS の話とは別軸（Workspace アプリの利用設定）なので、本演習では不要。
+
 **ここで学んだこと**: TXT による所有権証明は「ゾーンを書き換えられる者＝ドメインの支配者」という前提に立った、DNS の最も実用的な応用。Route 53 の `INSYNC` は「Route 53 の全 NS に配布完了」を意味するが、**リゾルバのキャッシュとは別物**。
 
 ---
 
-### 演習8: コストとクリーンアップ
+### 演習8: メール転送を設定する（MX レコード）
+
+**目的**: MX レコードの役割を理解し、`admin@htrbass44.click` 宛のメールが実際に受信できる状態にする。
+
+#### 8-1. 背景：なぜこの演習が必要か
+
+Cloud Identity **Free** は Gmail をホストしない。演習7 で証明した `htrbass44.click` の所有権はあくまで DNS 上の話であり、`admin@htrbass44.click` は**実体を持つメールボックスではない**。Google Cloud 組織のガードレール（Essential Contacts）は、通知の宛先を「組織の検証済みドメイン」に限定するため、外部の Gmail を直接登録できない。この 2 つの制約の間を埋めるのが MX レコードによるメール転送である。
+
+```mermaid
+graph LR
+    A["組織のポリシー<br/>essentialcontacts.managed.<br/>allowedContactDomains"] -->|"宛先を<br/>@htrbass44.click に限定"| B["admin@htrbass44.click<br/>= 実体のないラベル"]
+    C["Cloud Identity Free"] -.->|"Gmailを<br/>ホストしない"| B
+    B -->|"MXレコードで<br/>解決"| D["無料転送サービス"]
+    D -->|"実際に配送"| E["個人のGmail"]
+
+    style B fill:#EA4335,color:#fff
+    style E fill:#34A853,color:#fff
+```
+
+#### 8-2. MX レコードとは何か
+
+これまで扱った A（ホスト名→IP）、NS（ゾーン→権威サーバー）と同じ「レコードの一種」。**MX はホスト名→メールサーバーの対応**を示す。
+
+| フィールド | 意味 |
+|-----------|------|
+| 優先度（Preference） | 数値が小さいほど優先。複数指定して冗長化する |
+| メールサーバー名 | メールを受け取るホスト名（IP ではない点が A と違う） |
+
+```
+htrbass44.click.  MX  10  mx1.improvmx.com.
+htrbass44.click.  MX  20  mx2.improvmx.com.
+```
+
+外部から `admin@htrbass44.click` 宛にメールが送られると、送信側のメールサーバーは**演習1 と全く同じ委任チェーンをたどって** `htrbass44.click` の MX レコードを引き、そこに書かれたホストへ配送する。DNS の仕組みそのものが再利用されている。
+
+#### 8-3. 無料の転送サービスに登録する（ブラウザ操作）
+
+学習用途では、独自のメールサーバーを立てる必要はない。無料の転送サービス（例: ImprovMX）にドメインを登録すると、MX と SPF の推奨値が個別に発行される。
+
+1. 転送サービスのサイトでアカウントを作成する
+2. ドメイン `htrbass44.click` を追加する
+3. 表示された **MX レコード（通常 2 件）** と **SPF 用 TXT レコード** をメモする
+4. `admin@htrbass44.click` → 自分の Gmail 宛のエイリアス（転送ルール）を設定する
+
+> **正確な値はサービスのダッシュボードで確認すること**。転送サービスによって MX のホスト名が異なり、時期によって変わることもあるため、本教材では固定値を記載しない（ただし ImprovMX を使う場合、次節の値がそのまま使える）。
+
+**ワイルドカード（キャッチオール）エイリアスに注意**
+
+ImprovMX の場合、ドメイン追加直後に既定で `*` エイリアスが 1 件作られていることがある。
+
+![ImprovMX ダッシュボード — ワイルドカードエイリアスの設定（転送先メールアドレスは黒塗り済み）](./images/improvmx_dashboard_aliases_redacted.png)
+
+`*` は「`@htrbass44.click` 宛のメールは、どんな宛先文字列であっても全て転送先へ送る」という意味。つまり `admin@htrbass44.click` は、**個別にエイリアスを追加しなくてもこの時点で自動的に転送対象になる**。特定のアドレスだけ別の宛先に振り分けたい場合にのみ、個別エイリアスを追加する。
+
+#### 8-4. Route 53 に MX レコードを追加する
+
+サービスから取得した値に置き換えて実行する。以下は ImprovMX の実例（本教材の検証環境で実際に動作確認済み）。
+
+```bash
+cat > records/rr-mx.json <<'EOF'
+{
+  "Comment": "Email forwarding via ImprovMX",
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "htrbass44.click",
+      "Type": "MX",
+      "TTL": 300,
+      "ResourceRecords": [
+        {"Value": "10 mx1.improvmx.com"},
+        {"Value": "20 mx2.improvmx.com"}
+      ]
+    }
+  }]
+}
+EOF
+
+rr_apply records/rr-mx.json
+```
+
+> `MX` の値は `"優先度 ホスト名"` を 1 つの文字列として指定する。TXT のようなクォートの二重構造は不要。
+
+#### 8-5. SPF レコードを更新する（演習5-3・演習7 との接続）
+
+演習5-3 で入れた `v=spf1 -all` は「このドメインからのメール送信元は一切ない」という宣言だった。転送サービスがこのドメインを名乗って再送信する構成の場合、これと衝突する。転送サービスが指定する SPF 値に**置き換える**。
+
+```bash
+cat > records/rr-spf-update.json <<'EOF'
+{
+  "Comment": "Allow ImprovMX to relay on behalf of this domain",
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "htrbass44.click",
+      "Type": "TXT",
+      "TTL": 300,
+      "ResourceRecords": [
+        {"Value": "\"google-site-verification=xxxxxxxxxxxx\""},
+        {"Value": "\"v=spf1 include:spf.improvmx.com ~all\""}
+      ]
+    }
+  }]
+}
+EOF
+
+rr_apply records/rr-spf-update.json
+```
+
+> **演習5-3 で学んだ「同名同タイプは1レコードセット」がここでも効いてくる**。Cloud Identity の検証用 TXT（演習7）を消さないよう、既存の値を確認してから上書きすること。
+>
+> ```bash
+> aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" \
+>   --query "ResourceRecordSets[?Type=='TXT']" --output json
+> ```
+
+#### 8-6. 反映を確認する
+
+```bash
+# MX が引けるか
+qh htrbass44.click MX
+
+# SPF が更新されているか
+qh htrbass44.click TXT
+```
+
+転送サービス側でも DNS の認識状況を確認できる（ImprovMX の場合は「Setup」ボタン）。
+
+![ImprovMX — MX/SPF レコードの検証結果。両方とも緑のチェックが付き Active になっている](./images/improvmx_dns_verified_active.png)
+
+MX・SPF ともに緑のチェックが付けば、Route 53 に投入した値がサービス側の期待値と一致していることが確認できる。
+
+**✅ 確認ポイント**: 実際に外部の別メールアドレスから `admin@htrbass44.click` 宛にテストメールを送り、設定した Gmail に届くことを確認する。反映には数分〜数十分かかる場合がある（演習4 で学んだ、レジストラ側変更とは異なり、今回はホストゾーン内の変更なので比較的速い）。
+
+ImprovMX の場合、DNS の検証が完了すると自動で確認メールが届く。
+
+![ImprovMX からの転送設定完了通知メール](./images/improvmx_forwarding_success.png)
+
+> ⚠️ **この通知メールは DNS 検証の完了を示すもので、実際のテストメールが届いたことの証明ではない**。必ず自分でテストメールを送り、転送先の受信トレイに実際に届くことを確認すること。
+
+**ここで学んだこと**: MX レコードは「メールの委任」であり、名前解決の委任（NS）と同じ仕組みを流用している。ドメインを持つことと、そのドメインでメールを受信できることは別問題であり、両者を繋ぐのが MX レコードである。
+
+---
+
+### 演習9: コストとクリーンアップ
 
 **目的**: 何に課金されているかを理解し、不要なものを片付ける。
 
-#### 8-1. コストの内訳
+#### 9-1. コストの内訳
 
 | 項目 | 単価 | このハンズオンでの発生 |
 |------|------|----------------------|
@@ -1000,12 +1428,13 @@ q htrbass44.click TXT 8.8.8.8
 | ALIAS → AWS リソース | 無料 | — |
 | プライベートホストゾーンのクエリ | 無料 | — |
 | ドメイン更新 | TLD による | `.click` 年数ドル |
+| メール転送サービス（演習8） | 無料枠あり | サービスによる（ImprovMX 等は無料） |
 
 > **ホストゾーンは作成後 12 時間以内に削除すれば課金されない**（AWS の仕様）。それ以降は月額が発生する。
 
-#### 8-2. 学習用レコードだけ削除する（ホストゾーンは残す）
+#### 9-2. 学習用レコードだけ削除する（ホストゾーンは残す）
 
-Cloud Identity の検証 TXT は残し、テスト用レコードを消す。**`DELETE` は現在の値を完全一致で指定する必要がある**点に注意。
+Cloud Identity の検証 TXT と、演習8 で設定した MX / SPF は残し、テスト用レコードのみ消す。**`DELETE` は現在の値を完全一致で指定する必要がある**点に注意。
 
 ```bash
 # 現在のレコードを確認
@@ -1035,7 +1464,7 @@ aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" --change-bat
     "ResourceRecords":[{"Value":"203.0.113.99"}]}}]}'
 ```
 
-#### 8-3. ドメインの自動更新をオンにする
+#### 9-3. ドメインの自動更新をオンにする
 
 組織リソースはこのドメインに永続的に紐付くため、**失効させると管理不能になる**。
 
@@ -1048,7 +1477,7 @@ aws route53domains get-domain-detail --domain-name htrbass44.click \
   --region us-east-1 --query '{AutoRenew:AutoRenew,Expiry:ExpirationDate}'
 ```
 
-#### 8-4. （学習を完全に終える場合のみ）ホストゾーンを削除する
+#### 9-4. （学習を完全に終える場合のみ）ホストゾーンを削除する
 
 > ⚠️ Cloud Identity で組織を作った後にホストゾーンを削除すると、演習2 で見た **lame delegation の状態に戻る**。組織を使い続けるなら削除しないこと。
 
@@ -1085,12 +1514,17 @@ aws route53domains get-domain-detail --domain-name htrbass44.click \
 | CNAME の制約 | apex に置けない → ALIAS で回避 | 同上 |
 | TTL とキャッシュ | 「DNS 伝播」の正体 | `Resolve-DnsName` の TTL 観察 |
 | 所有権証明 | TXT 検証の原理 | `route53 get-change` |
+| メール転送 | MX の仕組み、SPF の書き換え | `route53 change-resource-record-sets`（MX） |
 | コスト | ホストゾーン $0.50/月 | — |
 
 ### 4.2 一言で言えるようになるべきこと
 
 | 用語 | 一言 |
 |------|------|
+| **TLD** | ドメイン名の一番右のラベル（`click`）。TLD ごとにレジストリ（運用会社）が違うので毎回調べる |
+| **SLD** | TLD の 1 つ左（`htrbass44`）。ここが「購入するドメイン」の単位 |
+| **FQDN** | 末尾のドットまで含む絶対名（`htrbass44.click.`）。Windows ではドット省略が失敗の原因になる |
+| **グルーレコード** | 委任と一緒に親が返す NS の IP。無いと解決が循環する場合がある |
 | **ゾーン** | あるドメイン以下の名前についての「答えの集合」 |
 | **ホストゾーン** | Route 53 におけるゾーンの実体。作ると NS が 4 台割り当たる |
 | **ネームサーバー** | ゾーンのデータを持ち、問い合わせに答えるサーバー |
@@ -1110,10 +1544,15 @@ aws route53domains get-domain-detail --domain-name htrbass44.click \
 
 | 症状 | 原因 | 切り分け方・対処 |
 |------|------|-----------------|
+| **`--change-batch file:///tmp/x.json` が `Unable to load paramfile`** | GitBash の `/tmp`（`C:\Users\...\Temp`）と、ネイティブ Windows の `aws` が見る `/tmp`（`C:\tmp`）は別物 | `handson/` を cwd にして `file://records/x.json` と**相対パス**で渡す。絶対パスが要るなら `"$(npf records/x.json)"` |
+| **`$ZONE_ID` がシェルを開くたびに消える** | シェル変数のまま保存していない | `env_set ZONE_ID <値>` で `env/handson.env` に永続化。以後 `source activate.sh` で復元 |
 | `nslookup` が「Server failed」を返す | SERVFAIL。委任先で解決に失敗（lame delegation など） | `qh <domain> <type>` で DoH に切り替えると `extended_dns_errors` に理由が出る |
 | **シングルラベル名（`click` 等）が引けない** | Windows が DNS 名でなくホスト名と解釈し、`ERROR_INVALID_NAME` / Server failed になる | **末尾にドットを付ける**（`click.`）。ヘルパー関数 `q` は自動付与する |
 | `nslookup` の日本語が文字化けする | CP932 出力を GitBash が UTF-8 と解釈 | `\| iconv -f CP932 -t UTF-8` を通す。または `Resolve-DnsName` / DoH を使う |
 | 応答に `サーバー: UnKnown` と出る | 問い合わせ先 IP の逆引き（PTR）ができないだけ | **無視してよい**。DNS の応答自体には影響しない |
+| **`nslookup` の出力に `in-addr.arpa` の NS が大量に出る** | `nslookup` が問い合わせ先サーバーの逆引きを試み、その途中の委任情報を print している | **ノイズなので無視**。本題は後半のブロック。`qh`（DoH）を使えば出ない |
+| **`q` が何も返さない（TLD レジストリへの問い合わせ時）** | `Resolve-DnsName` が委任を自分で追いかけ、その先が `REFUSED` のため SERVFAIL になる | 委任の観察には `qn`（nslookup）を使う。`q` は空なら自動で `qn` にフォールバックする |
+| 委任（referral）が見えない | ツールが委任を追いかけて最終結果だけ返している | `qn`（nslookup）か `qh`（DoH）に切り替える |
 | ドメインが全く引けない | lame delegation（今回のケース） | `q <domain> NS <TLDのNS>` で親側の委任先を確認 → 実在するホストゾーンの委任セットと突き合わせる |
 | ホストゾーンを作ったのに引けない | 親側の NS が古いまま | `route53domains update-domain-nameservers` を実行 |
 | NS を変えたのに反映されない | TLD レジストリへの反映待ち、または委任情報の TTL | `q <domain> NS ns01.trs-dns.com`（`.click` の場合）で親側を直接確認。親が新しければ待つだけ |
