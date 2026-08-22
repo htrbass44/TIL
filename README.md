@@ -2,7 +2,7 @@
 
 ## 学習ログ
 
-凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
+凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab ／ 🐶 Datadog（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
 
 ### 2026年7月
 
@@ -41,8 +41,9 @@
 <tr><td><strong>9</strong></td><td><strong>10</strong></td><td><strong>11</strong></td><td><strong>12</strong></td><td><strong>13</strong></td><td><strong>14</strong></td><td><strong>15</strong></td></tr>
 <tr><td colspan="2"><a href="gcloud/cloud-identity-free-handson.md" title="独自ドメインからCloud Identity Freeに登録し、ドメイン所有権のTXT検証、組織リソースの自動生成確認、グループ/ユーザー作成、組織部門(OU)によるサービス制限までを構築するハンズオン">🔷 Cloud Identity</a></td><td colspan="4"><a href="gcloud/google-cloud-organization-handson.md" title="AWS Organizations経験者向けに、Google Cloudでのフォルダ階層・IAM委譲・組織のポリシー/IAM Denyポリシーによるガードレール・課金ガバナンス・監査ログ集約・Terraformでのプロジェクト払い出し自動化までを構築するハンズオン">🔷 組織払い出し</a></td><td></td></tr>
 <tr><td><strong>16</strong></td><td><strong>17</strong></td><td><strong>18</strong></td><td><strong>19</strong></td><td><strong>20</strong></td><td><strong>21</strong></td><td><strong>22</strong></td></tr>
-<tr><td></td><td colspan="2"><a href="gitlab/gitlab-duo-agent-platform-handson.md" title="GitLab.comでUltimate無料トライアルを申請しGitLab Duo Agent Platformを有効化。Agentic Chat(Planner)でのIssue作成、Developer FlowによるドラフトMR自動生成、SessionsでのFlow実行トレース確認とクレジット消費(24/24)を体験するハンズオン">🦊 GitLab Duo</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td colspan="2"><a href="gitlab/gitlab-duo-agent-platform-handson.md" title="GitLab.comでUltimate無料トライアルを申請しGitLab Duo Agent Platformを有効化。Agentic Chat(Planner)でのIssue作成、Developer FlowによるドラフトMR自動生成、SessionsでのFlow実行トレース確認とクレジット消費(24/24)を体験するハンズオン">🦊 GitLab Duo</a></td><td colspan="4"><a href="datadog/datadog-aiops-handson.md" title="（8/19〜23に学習）AWSサーバーレス構成(API Gateway+Lambda+DynamoDB)をAWS Integration・Lambda Extensionで計装し、APM分散トレース・Service Map・Watchdogによる異常検知/根本原因分析(RCA)・Anomaly Monitor・Cloud Cost Managementを体験するハンズオン">🐶 Datadog AIOps</a></td></tr>
 <tr><td><strong>23</strong></td><td><strong>24</strong></td><td><strong>25</strong></td><td><strong>26</strong></td><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td></tr>
+<tr><td><a href="datadog/datadog-aiops-handson.md" title="（8/19〜23に学習）AWSサーバーレス構成(API Gateway+Lambda+DynamoDB)をAWS Integration・Lambda Extensionで計装し、APM分散トレース・Service Map・Watchdogによる異常検知/根本原因分析(RCA)・Anomaly Monitor・Cloud Cost Managementを体験するハンズオン">🐶 Datadog AIOps</a></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td><strong>30</strong></td><td><strong>31</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
