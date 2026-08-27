@@ -2,7 +2,7 @@
 
 ## 学習ログ
 
-凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab ／ 🐶 Datadog ／ 🐍 Snyk（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
+凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab ／ 🐶 Datadog ／ 🐍 Snyk ／ 🔦 Splunk（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
 
 ### 2026年7月
 
@@ -42,9 +42,10 @@
 <tr><td colspan="2"><a href="gcloud/cloud-identity-free-handson.md" title="独自ドメインからCloud Identity Freeに登録し、ドメイン所有権のTXT検証、組織リソースの自動生成確認、グループ/ユーザー作成、組織部門(OU)によるサービス制限までを構築するハンズオン">🔷 Cloud Identity</a></td><td colspan="4"><a href="gcloud/google-cloud-organization-handson.md" title="AWS Organizations経験者向けに、Google Cloudでのフォルダ階層・IAM委譲・組織のポリシー/IAM Denyポリシーによるガードレール・課金ガバナンス・監査ログ集約・Terraformでのプロジェクト払い出し自動化までを構築するハンズオン">🔷 組織払い出し</a></td><td></td></tr>
 <tr><td><strong>16</strong></td><td><strong>17</strong></td><td><strong>18</strong></td><td><strong>19</strong></td><td><strong>20</strong></td><td><strong>21</strong></td><td><strong>22</strong></td></tr>
 <tr><td></td><td colspan="2"><a href="gitlab/gitlab-duo-agent-platform-handson.md" title="GitLab.comでUltimate無料トライアルを申請しGitLab Duo Agent Platformを有効化。Agentic Chat(Planner)でのIssue作成、Developer FlowによるドラフトMR自動生成、SessionsでのFlow実行トレース確認とクレジット消費(24/24)を体験するハンズオン">🦊 GitLab Duo</a></td><td colspan="4"><a href="datadog/datadog-aiops-handson.md" title="（8/19〜23に学習）AWSサーバーレス構成(API Gateway+Lambda+DynamoDB)をAWS Integration・Lambda Extensionで計装し、APM分散トレース・Service Map・Watchdogによる異常検知/根本原因分析(RCA)・Anomaly Monitor・Cloud Cost Managementを体験するハンズオン">🐶 Datadog AIOps</a></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td><td></td><td><a href="snyk/snyk-handson.md" title="（8/22〜23に学習）AWS Lambda題材にSnyk Open Source(依存脆弱性)・Snyk Code(SAST)・Snyk IaC(Terraform誤設定)・Snyk Container(ECRイメージ)・Snyk Cloud(概念)を一気通貫で学び、GitLab CI/CDにパイプラインゲートとして組み込むハンズオン">🐍 Snyk</a></td></tr>
 <tr><td><strong>23</strong></td><td><strong>24</strong></td><td><strong>25</strong></td><td><strong>26</strong></td><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td></tr>
 <tr><td><a href="datadog/datadog-aiops-handson.md" title="（8/19〜23に学習）AWSサーバーレス構成(API Gateway+Lambda+DynamoDB)をAWS Integration・Lambda Extensionで計装し、APM分散トレース・Service Map・Watchdogによる異常検知/根本原因分析(RCA)・Anomaly Monitor・Cloud Cost Managementを体験するハンズオン">🐶 Datadog AIOps</a></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><a href="snyk/snyk-handson.md" title="AWS Lambda題材にSnyk Open Source(依存脆弱性)・Snyk Code(SAST)・Snyk IaC(Terraform誤設定)・Snyk Container(ECRイメージ)・Snyk Cloud(概念)を一気通貫で学び、GitLab CI/CDにパイプラインゲートとして組み込むハンズオン">🐍 Snyk</a></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><a href="snyk/snyk-handson.md" title="（8/22〜23に学習）AWS Lambda題材にSnyk Open Source(依存脆弱性)・Snyk Code(SAST)・Snyk IaC(Terraform誤設定)・Snyk Container(ECRイメージ)・Snyk Cloud(概念)を一気通貫で学び、GitLab CI/CDにパイプラインゲートとして組み込むハンズオン">🐍 Snyk</a></td><td><a href="splunk/splunk-handson.md" title="AWSのCloudTrail・VPC Flow Logs・アプリログをSplunk Cloud Platformに集約するハンズオン。Splunk Add-on for AWS(SQS-Based S3/CloudWatch Logs入力)とHTTP Event Collectorの2方式で取り込み、SPLでの横断検索・ダッシュボード・アラートまで体験">🔦 Splunk</a></td><td colspan="2"><a href="gitlab-idp/gitlab-idp-catalog-handson.md" title="GitLabの標準機能だけでIDP的セルフサービス・クラウドカタログを構築。単一の共有カタログプロジェクトから、部門が自分のAWSアカウントでOIDCブートストラップを実行し、事前登録なしでWell-Architected構成をセルフサービスにデプロイするハンズオン">🦊 IDPカタログ</a></td><td></td><td></td><td></td></tr>
 <tr><td><strong>30</strong></td><td><strong>31</strong></td><td></td><td></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
