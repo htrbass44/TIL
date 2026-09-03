@@ -624,6 +624,18 @@ terraform apply \
 **目的**: 管理者への依頼なしに、部門Bが自分だけで使い始められることを確認する。
 
 1. 部門BのAWSアカウントで演習2と同じ手順（`department_name=dept-b`）でブートストラップを実行する
+
+   > **注意**: `bootstrap/aws-trust`のTerraform stateはローカルファイルのため、部門Aで使ったのと同じディレクトリ・同じstateのままだと、部門Bのapply時に部門Aのリソースを参照しようとして`AccessDenied`になる（違うAWSアカウントの認証情報では読めないため）。部門ごとに**Terraform workspaceを分けて**、stateを独立させること。
+
+   ```bash
+   export AWS_PROFILE=<部門BのAWSプロファイル名>
+   cd well-architected-catalog/bootstrap/aws-trust
+   terraform workspace new dept-b
+   terraform apply \
+     -var="department_name=dept-b" \
+     -var="gitlab_project_path=handson-idp-catalog/well-architected-catalog"
+   ```
+
 2. GitLabの管理者に何も連絡せず、`well-architected-catalog`プロジェクトで「新しいパイプライン」を実行し、インプット`aws_role_arn`と`department_name=dept-b`を入力してデプロイする
 
 ✅ **確認ポイント**: `well-architected-catalog`プロジェクト側に部門Bのための変更が一切不要だったこと（プロジェクト作成もCI/CD変数登録も発生していない）
@@ -664,6 +676,7 @@ terraform apply \
 | `deploy`ジョブが「aws_role_arn と department_name を指定してください」で失敗する | 「新しいパイプライン」画面のインプット欄に値を入力し忘れている、またはブランチ選択がmain以外 | インプットの`aws_role_arn`・`department_name`に値を入力し、ブランチが`main`であることを確認する |
 | 「新しいパイプライン」画面に「この設定にインプットはありません」と表示される | `.gitlab-ci.yml`冒頭に`spec:inputs`ブロックが正しく反映されていない（pushし忘れ、YAML構文エラーなど） | `.gitlab-ci.yml`の1行目が`spec:`から始まっているか、`---`区切りが正しいかを確認し、pushし直す |
 | 別部門のstateを上書きしてしまう | `department_name`インプットの入力ミス、または同名を複数部門が使ってしまった | `TF_STATE_NAME`が`dept-${DEPARTMENT_NAME}`である前提で、部門名の命名規則を事前に決めておく |
+| ブートストラップの`terraform apply`が別アカウントのリソースを読みに行き`AccessDenied`になる | `bootstrap/aws-trust`のローカルstateが、以前別の部門でapplyした際の内容のまま残っている(同じディレクトリ・同じstateを複数アカウントで使い回している) | 部門ごとに`terraform workspace new <部門名>`でstateを分離してからapplyする |
 | ジョブが`Terraform has no command named "sh"`で失敗する | `hashicorp/terraform`イメージのENTRYPOINTが`terraform`固定になっており、Runnerがシェルスクリプトを実行できない | `image:`を`name`/`entrypoint: [""]`の形式で指定し、ENTRYPOINTを打ち消す |
 | `Error relocating ... pyexpat ... symbol not found`で失敗する | Alpineの`aws-cli`パッケージと`libexpat`のバイナリ互換性問題（既知の不具合） | `aws sts assume-role-with-web-identity`をCLIで呼ぶのをやめ、`AWS_ROLE_ARN`+`AWS_WEB_IDENTITY_TOKEN_FILE`環境変数によるAWS SDKネイティブのOIDC認証に切り替える（AWS CLI自体が不要になる） |
 | `terraform init`が`Error: Error refreshing state: HTTP remote state endpoint requires auth`で失敗する | `TF_HTTP_USERNAME`に部門名など任意の文字列を指定していた。GitLab-managed Terraform stateは`TF_HTTP_USERNAME`が固定文字列`gitlab-ci-token`であることを前提にしている | `TF_HTTP_USERNAME="gitlab-ci-token"`に修正する（`TF_HTTP_PASSWORD`は`${CI_JOB_TOKEN}`のまま） |
