@@ -2,7 +2,7 @@
 
 ## 学習ログ
 
-凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab ／ 🐶 Datadog ／ 🐍 Snyk ／ 🔦 Splunk ／ 🎭 Backstage ／ 🟪 Terraform（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
+凡例: 🔧 Git ／ 🤖 AI駆動開発 ／ 🧩 Agent Skills ／ ☁️ AWS CDK ／ 🕵️ AWS DevOps Agent ／ 💰 AWS FinOps Agent ／ 🧠 Bedrock AgentCore ／ 🛡️ AWS Security Agent ／ 🔷 Google Cloud ／ 🌐 DNS・ネットワーク ／ 🦊 GitLab ／ 🐶 Datadog ／ 🐍 Snyk ／ 🔦 Splunk ／ 🎭 Backstage ／ 🟪 Terraform ／ 🔭 OpenTelemetry（リンクにカーソルを合わせると概要がツールチップ表示されます。複数日にまたがって学習した内容は、その日数分のセルを結合して1つのリンクにしています）
 
 ### 2026年7月
 
@@ -60,7 +60,7 @@
 <tr><td></td><td></td><td><strong>1</strong></td><td><strong>2</strong></td><td><strong>3</strong></td><td><strong>4</strong></td><td><strong>5</strong></td></tr>
 <tr><td></td><td></td><td colspan="2"><a href="backstage/backstage-gitlab-handson.md" title="（8/29、9/1〜2に学習）SpotifyのOSS IDPフレームワークBackstageをGitLabバックエンドで構築。手動登録・GitLab Discoveryによる自動ディスカバリー・Software Templateからのリポジトリ自動作成/カタログ登録・エンティティ間の関係グラフまで体験するハンズオン">🎭 Backstage</a></td><td></td><td></td><td><a href="terraform-catalog/terraform-service-catalog-handson.md" title="Terraformのstate/plan/apply/backend/moduleを学び直し、GitLabのTerraform Module Registry・OIDC認証・CI/CDでのMR駆動plan/applyを使った社内セルフサービス・クラウドサービスカタログの構築までを体験するハンズオン">🟪 TFカタログ</a></td></tr>
 <tr><td><strong>6</strong></td><td><strong>7</strong></td><td><strong>8</strong></td><td><strong>9</strong></td><td><strong>10</strong></td><td><strong>11</strong></td><td><strong>12</strong></td></tr>
-<tr><td></td><td colspan="2"><a href="terraform-sqs/sqs-architecture.md" title="既存のTerraformコード(env/dev/sqs, sqs_muti_regions)を読み解いた構成解説。S3バックエンドでのstate管理、単一/マルチリージョンでのプロバイダエイリアス・configuration_aliasesによるモジュール間受け渡し、実際に発生したエイリアス名不一致エラーの調査・修正記録">🟪 SQS構成解説</a></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td colspan="2"><a href="terraform-sqs/sqs-architecture.md" title="既存のTerraformコード(env/dev/sqs, sqs_muti_regions)を読み解いた構成解説。S3バックエンドでのstate管理、単一/マルチリージョンでのプロバイダエイリアス・configuration_aliasesによるモジュール間受け渡し、実際に発生したエイリアス名不一致エラーの調査・修正記録">🟪 SQS構成解説</a></td><td></td><td></td><td colspan="2"><a href="otel/opentelemetry-aws-handson.md" title="OpenTelemetry(Traces/Metrics/Logs)の基礎をローカルDocker Composeで体感し、AWS Lambda(ADOT Lambdaレイヤー→X-Ray)・Amazon ECS Fargate(ADOT Collectorサイドカーで X-Ray/CloudWatch/AMPへ振り分け)・Amazon Managed Grafana(横断可視化)へと段階的に展開するハンズオン">🔭 OpenTelemetry</a></td></tr>
 <tr><td><strong>13</strong></td><td><strong>14</strong></td><td><strong>15</strong></td><td><strong>16</strong></td><td><strong>17</strong></td><td><strong>18</strong></td><td><strong>19</strong></td></tr>
 <tr><td><strong>20</strong></td><td><strong>21</strong></td><td><strong>22</strong></td><td><strong>23</strong></td><td><strong>24</strong></td><td><strong>25</strong></td><td><strong>26</strong></td></tr>
 <tr><td><strong>27</strong></td><td><strong>28</strong></td><td><strong>29</strong></td><td><strong>30</strong></td><td></td><td></td><td></td></tr>
